@@ -1,0 +1,6 @@
+*.log
+light_server.log
+venv
+*.pyc
+*.save
+*.1
