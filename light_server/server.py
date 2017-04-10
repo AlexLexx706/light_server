@@ -24,6 +24,10 @@ def light():
 	except 	KeyError:
 		json.dumps({'res':'wrong light id:%s' % data['id']})
 
-if __name__ == '__main__':
+
+def main():
    http_server = WSGIServer(('', 8080), app)
    http_server.serve_forever()
+
+if __name__ == '__main__':
+	main()
