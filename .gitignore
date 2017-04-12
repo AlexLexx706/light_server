@@ -4,3 +4,7 @@ venv
 *.pyc
 *.save
 *.1
+build/
+dist/
+light_server.egg-info/
+

@@ -10,8 +10,13 @@ setup(
     license='GPL',
     zip_safe=False,
     entry_points={
+        'console_scripts': [
+            'light_server = light_server.server:main'
+    	],
+    },
+    package_data={
         'light_server': [
-            'configurator = light_server.server:main'
-        ],
+            'templates/*.*'
+	]
     },
 )
