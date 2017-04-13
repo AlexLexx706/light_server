@@ -1,1 +1,1 @@
-сервак управления свером у меня дома, доступен по адресу: http://80.240.223.101:8080
+You can turn on/off light in my room by this address: http://light.alexlexx.ru Have fun!!!
