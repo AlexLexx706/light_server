@@ -5,29 +5,34 @@ from flask import render_template
 
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
-pins ={
-	0: pin_out.PinOut(14),
-	1: pin_out.PinOut(15)}
+pins = {
+    0: pin_out.PinOut(14),
+    1: pin_out.PinOut(15)}
 counter = 0
+
 
 @app.route("/")
 def hello():
-   global counter
-   return render_template('hello.html', counter=counter)
+    global counter
+    return render_template('hello.html', counter=counter)
+
 
 @app.route('/api/light', methods=['PUT'])
 def light():
-	data = request.get_json()
-	try:
-		pins[data['id']].set(data['value'])
-		return json.dumps({'res':"ok"})
-	except 	KeyError:
-		json.dumps({'res':'wrong light id:%s' % data['id']})
+    data = request.get_json()
+    try:
+        pins[data['id']].set(data['value'])
+        return json.dumps({'res': "ok"})
+    except KeyError:
+        json.dumps({'res': 'wrong light id:%s' % data['id']})
 
 
 def main():
-   http_server = WSGIServer(('', 8080), app)
-   http_server.serve_forever()
+    port = 8080
+    print("start server on port:%s" % (port, ))
+    http_server = WSGIServer(('', port), app)
+    http_server.serve_forever()
+
 
 if __name__ == '__main__':
-	main()
+    main()
