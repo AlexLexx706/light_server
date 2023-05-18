@@ -1,38 +1,43 @@
+"""GPIO wrapper
+"""
 import time
-import os
+import logging
 
-# windows dummy
-if os.name == 'nt':
-    class PinOut:
-        def __init__(self, pin_num):
-            pass
+LOG = logging.getLogger(__name__)
 
-        def set(self, val):
-            pass
-else:
-    class PinOut:
-        def __init__(self, pin_num):
-            self.num = pin_num
-            try:
-                with open('/sys/class/gpio/export', 'w') as f:
-                    f.write('%s' % self.num)
-            except IOError:
-                pass
-            with open('/sys/class/gpio/gpio%s/direction' % self.num, 'w') as f:
-                f.write('out')
-            self.f = open('/sys/class/gpio/gpio%s/value' % self.num, 'w')
-            self.set(1)
+class PinOut:
+    """gpio pin
+    """
+    def __init__(self, pin_num):
+        self._num = pin_num
+        try:
+            with open('/sys/class/gpio/export', 'w', encoding="utf8") as f:
+                f.write(f'{self._num}')
+            with open(f'/sys/class/gpio/gpio{self._num}/direction', 'w', encoding="utf8") as file:
+                file.write('out')
+            self._file = open(f'/sys/class/gpio/gpio{self._num}/value', 'w', encoding="utf8")
+        except Exception as exc:
+            LOG.warning("Can't open gpio:%s", exc)
+            self._file = None
+        self.set(1)
 
-        def set(self, val):
-            self.f.write('%s' % val)
-            self.f.flush()
+    def set(self, val):
+        """set pin value
 
+        Args:
+            val (int): 0/1
+        """
+        if self._file:
+            self._file.write(f'{val}')
+            self._file.flush()
+        else:
+            LOG.warning("No gpio:%s", self._num)
 
 if __name__ == '__main__':
     pin = PinOut(14)
-    delay = 1
+    DELAY = 1
     while 1:
         pin.set(0)
-        time.sleep(delay)
+        time.sleep(DELAY)
         pin.set(1)
-        time.sleep(delay)
+        time.sleep(DELAY)
