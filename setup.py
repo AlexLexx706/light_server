@@ -2,7 +2,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='light_server',
+    name='stand_server',
     version='0.1',
     author='alexlexx',
     author_email='alexlexx1@gmail.com',
@@ -11,11 +11,11 @@ setup(
     zip_safe=False,
     entry_points={
         'console_scripts': [
-            'light_server = light_server.server:main'
+            'stand_server = stand_server.server:main'
     	],
     },
     package_data={
-        'light_server': [
+        'server': [
             'templates/*.*'
 	]
     },

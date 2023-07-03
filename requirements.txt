@@ -3,3 +3,4 @@ gevent
 Jinja2
 flask_socketio
 gevent-websocket
+requests

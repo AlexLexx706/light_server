@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html>
+		<head>
+		<link rel="stylesheet" href="http://cdn.webix.com/edge/webix.css" type="text/css"> 
+		<script src="http://cdn.webix.com/edge/webix.js" type="text/javascript"></script> 
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+		</head>
+		<body>
+			<script type="text/javascript" charset="utf-8">
+				var socket = io();
+				var table = {on: 1, off: 0}
+				var inv_table = {1: 'on', 0: 'off'}
+
+				socket.on('update_value', function(data) {
+					console.log('update_value:', data);
+					$$("relay_" + data.id).setValue(data.value, "server");
+				});
+
+				var on_change_fun = function(newValue, oldValue, config){
+					if (config != 'server') {
+						data = {value: newValue,	id: this.config.index}
+						console.log('value_changed:', data);
+						socket.emit('value_changed', data);
+					}
+				}
+
+				webix.protoUI({
+    				name:"pwrswitch",
+					defaults:{
+						onLabel:"PWR ON",
+						offLabel:"PWR OFF",
+						width: 105,
+						on: {onChange: on_change_fun},
+					},
+					$init:function(config){
+						config.id = "relay_" + config.index
+					}
+				}, webix.ui.switch);
+
+				webix.protoUI({
+    				name:"tmrswitch",
+					defaults:{
+						onLabel:"TMR ON",
+						offLabel:"TMR OFF",
+					}
+				}, webix.ui.pwrswitch);
+
+				/* place for UI configuration */
+				webix.ui({
+					rows:[
+						{ template:"<span style='font-size:16px; font-weight:500'>STAND UNITS POWER MANAGEMENT</span>", type:"header", css:"webix_dark"},
+						{% for btn in buttons %}
+							{
+								view: "form",
+								elements:[{
+									cols: [
+										{ view:"label", label:"{{btn.name}}", width:200},
+										{ 
+											view:"pwrswitch",
+											index:{{btn.power.id}},
+											value:{{btn.power.value}},
+											width:115
+										},
+										{ 
+											view:"tmrswitch",
+											index:{{btn.timer.id}},
+											value:{{btn.timer.value}},
+											width:115
+										}								
+									]
+								}]
+								
+							},
+						{% endfor %}
+					]
+					});
+			</script>
+		</body>
+</html>
