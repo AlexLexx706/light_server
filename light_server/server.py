@@ -8,7 +8,7 @@ app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.config['SECRET_KEY'] = 'secret!'
 app.config["DEBUG"] = True
-
+clients_counter = 0
 socketio = SocketIO(app)
 
 # CONTROL pins!!!
@@ -30,6 +30,19 @@ def handle_value_changed(data):
     app.logger.info('received json: %s', str(data))
     pins[data['id']].set(data['value'])
     emit('update_value', data, broadcast=True)
+
+
+@socketio.event
+def connect(**args):
+    global clients_counter
+    clients_counter += 1
+    print(f'connect clients_counter:{clients_counter} args:{args}')
+
+@socketio.event
+def disconnect(**args):
+    global clients_counter
+    clients_counter -= 1
+    print(f'disconnect clients_counter:{clients_counter} args:{args}')
 
 
 @app.route("/")
