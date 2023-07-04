@@ -6,5 +6,5 @@ venv
 *.1
 build/
 dist/
-light_server.egg-info/
+*.egg-info/
 

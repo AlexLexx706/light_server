@@ -11,7 +11,7 @@ setup(
     zip_safe=False,
     entry_points={
         'console_scripts': [
-            'stand_server = stand_server.server:main'
+            'stand_server = server.server:main'
     	],
     },
     package_data={

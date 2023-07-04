@@ -1,7 +1,7 @@
 from gevent import monkey; monkey.patch_all()
-from flask import Flask, request, json
-from flask import render_template
+from flask import Flask, render_template, request, json, redirect, url_for, session
 from flask_socketio import SocketIO, send, emit
+
 import logging
 
 from relay.relay import RelayMonitor
@@ -10,11 +10,11 @@ relays = [{"ip":"192.168.4.116", "worker": None}]
 
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
-app.config['SECRET_KEY'] = 'secret!'
+app.config['SECRET_KEY'] = 'secret!' # НУ мего секрет, испольщуеться для шафрования данных сесии
 app.config["DEBUG"] = True
+app.connecions_n = 0
 
 socketio = SocketIO(app)
-connecions_n = 0
 
 # CONTROL pins!!!
 pins = {
@@ -26,43 +26,37 @@ pins = {
     5: 1,
 }
 
+# acces to user!!! Ну суппер секрет!!!, используеться для логина 
+user = {
+    'username': 'admin',
+    'password': '123456'
+}
+
 def start_relay_workers():
-    app.logger.info('start_relay_workers 1.')
     for r in relays:
-        app.logger.info('start_relay_workers 2.')
         if r['worker'] is None:
-            app.logger.info('start_relay_workers 3.')
             r['worker']  = RelayMonitor(r['ip'])
-            app.logger.info('start_relay_workers 4.')
             r['worker'].start()
-            app.logger.info(f'START relay {r["ip"]}')
 
 
 def stop_relay_workers():
-    app.logger.info('stop_relay_workers 1.')
     for r in relays:
-        app.logger.info('stop_relay_workers 2.')
         if r['worker'] is not None:
-            app.logger.info('stop_relay_workers 3.')
             r['worker'].stop()
-            app.logger.info('stop_relay_workers 4.')
             r['worker'] = None
-            app.logger.info(f'STOP relay {r["ip"]}')
 
 @socketio.on('connect')
 def connect():
-    global connecions_n
-    connecions_n+= 1
-    app.logger.info(f'connect: clients {connecions_n}')
+    app.connecions_n += 1
+    app.logger.info(f'connect: clients {app.connecions_n}')
 
 
 @socketio.on('disconnect')
 def disconnect():
-    global connecions_n
-    connecions_n-= 1
-    if connecions_n == 0:
+    app.connecions_n -= 1
+    if app.connecions_n == 0:
         stop_relay_workers()
-    app.logger.info(f'disconnect: clients {connecions_n}')
+    app.logger.info(f'disconnect: clients {app.connecions_n}')
 
 
 @socketio.on('value_changed')
@@ -76,17 +70,47 @@ def handle_value_changed(data):
     emit('update_value', data, broadcast=True)
 
 
+@app.route('/')
+def index():
+    """handle first page, reducrect to login
+    """
+    return redirect(url_for('login'))
 
-@app.route("/")
-def hello():
-    """provide main page
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """login handle"""
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        if user['username'] == username and user['password'] == password:
+            session['username'] = username
+            return redirect(url_for('dashboard'))
+        else:
+            return "Invalid username or password"
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    """logout handler"""
+    session.pop('username', None)
+    return redirect(url_for('login'))
+
+
+@app.route("/dashboard")
+def dashboard():
+    """provide main working
 
     Returns:
         string: html page
     """
-    app.logger.info('hello 1.')
+    # authorization check, if there is no authorization, go to the login page
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    app.logger.info('dashboard, user:%s', session["username"])
+    
+    # normal workflow
     start_relay_workers()
-    app.logger.info('hello 2.')
             
     buttons = [
         {'name':'AGI2 rev6.10', 'power': {'id':0, 'value':pins[0]}, 'timer': {'id':1, 'value':pins[1]}},
@@ -95,7 +119,7 @@ def hello():
 ]   
     app.logger.info('hello: %s', buttons)
     return render_template(
-        'hello.html',
+        'dashboard.html',
         buttons=buttons)
 
 
@@ -103,7 +127,7 @@ def main():
     """
         Server
     """
-    port = 7078
+    port = 7079
     socketio.run(app, host='0.0.0.0', port=port)
 
 
